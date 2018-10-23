@@ -1,0 +1,19 @@
+PROCEDURE "DA.PUBLISH::UpdateSchedule" ( IN viewid Integer, IN ITEM Integer, IN VID Integer, IN cron NVARCHAR(50),
+IN folder NVARCHAR(255), IN file NVARCHAR(255))
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+AS
+BEGIN
+   /*************************************
+       Write your procedure logic 
+   *************************************/
+   
+   Update "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" 
+   SET  cron = :cron, 
+      folder = :folder ,
+      file = :file
+   where id = :viewid and
+         vid = :vid;
+         
+END

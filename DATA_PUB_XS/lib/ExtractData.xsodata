@@ -1,0 +1,7 @@
+service {
+	"DA.PUBLISH::DataModel.EXTRACT_H" as "HEADER" navigates ("Schedule" as "Schedule");
+	"DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" as "ITEM_S" navigates ("Schedule" as "Schedule_Detail");
+	"DA.PUBLISH::DataModel.EXTRACT_VARIANT" as "VARIANT" navigates ("Variant" as "Item_Detail");
+     association "Schedule" principal "HEADER"("ID") multiplicity "1" dependent "ITEM_S"("ID") multiplicity "*";
+     association "Variant" principal "HEADER"("ID") multiplicity "1" dependent "VARIANT"("ID") multiplicity "*";
+}                             

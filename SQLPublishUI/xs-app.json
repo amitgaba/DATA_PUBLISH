@@ -1,0 +1,13 @@
+{
+  "welcomeFile": "index.html",
+  "authenticationMethod": "none",
+  "routes": [{
+  		"source": "(.*)(.xsjs)",
+		"destination": "DATA_PUB_XS_be",
+		"authenticationType": "none"
+		}, {
+		"source": "(.*)(.xsodata)",
+		"destination": "DATA_PUB_XS_be",
+		"authenticationType": "none"
+  }]      
+}

@@ -1,0 +1,45 @@
+<edmx:Edmx
+    xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" Version="1.0">
+    <edmx:DataServices
+        xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" m:DataServiceVersion="2.0">
+        <Schema
+            xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"
+            xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+            xmlns="http://schemas.microsoft.com/ado/2008/09/edm" Namespace="default">
+            <EntityType Name="SQLType">
+                <Key>
+                    <PropertyRef Name="ID"/>
+                </Key>
+                <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+                <Property Name="S_CODE" Type="Edm.String" MaxLength="1000"/>
+                <Property Name="SFOLDER" Type="Edm.String" MaxLength="255"/>
+                <Property Name="TFOLDER" Type="Edm.String" MaxLength="255"/>
+                <Property Name="TFILE" Type="Edm.String" MaxLength="255"/>
+                <Property Name="CRON" Type="Edm.String" MaxLength="255"/>
+                <NavigationProperty Name="Schedule" Relationship="default.ScheduleType" FromRole="SQLPrincipal" ToRole="SQL_HEADDependent"/>
+            </EntityType>
+            <EntityType Name="SQL_HEADType">
+                <Key>
+                    <PropertyRef Name="ID"/>
+                    <PropertyRef Name="POSITION"/>
+                </Key>
+                <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+                <Property Name="POSITION" Type="Edm.Int32" Nullable="false"/>
+                <Property Name="HEAD_TEXT" Type="Edm.String" MaxLength="100"/>
+                <NavigationProperty Name="Schedule_Detail" Relationship="default.ScheduleType" FromRole="SQL_HEADDependent" ToRole="SQLPrincipal"/>
+            </EntityType>
+            <Association Name="ScheduleType">
+                <End Type="default.SQLType" Role="SQLPrincipal" Multiplicity="1"/>
+                <End Type="default.SQL_HEADType" Role="SQL_HEADDependent" Multiplicity="*"/>
+            </Association>
+            <EntityContainer Name="v2" m:IsDefaultEntityContainer="true">
+                <EntitySet Name="SQL" EntityType="default.SQLType"/>
+                <EntitySet Name="SQL_HEAD" EntityType="default.SQL_HEADType"/>
+                <AssociationSet Name="Schedule" Association="default.ScheduleType">
+                    <End Role="SQLPrincipal" EntitySet="SQL"/>
+                    <End Role="SQL_HEADDependent" EntitySet="SQL_HEAD"/>
+                </AssociationSet>
+            </EntityContainer>
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>

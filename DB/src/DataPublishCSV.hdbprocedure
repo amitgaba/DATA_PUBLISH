@@ -1,0 +1,32 @@
+PROCEDURE "DA.PUBLISH::DataPublishCSV" (IN IT_TAB TABLE (viewname  NVARCHAR(255), schemaname  NVARCHAR(255),	
+			filter NVARCHAR(3000), cron NVARCHAR(50), tfolder NVARCHAR(255), 
+			tfile NVARCHAR(100), functional NVARCHAR(50),
+		    plhold NVARCHAR(500), schid NVARCHAR(10), access NVARCHAR(1)), IN outcol NVARCHAR(3000) )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   AS
+BEGIN
+   /*************************************
+       Write your procedure logic 
+   *************************************/
+  
+DECLARE CURSOR c_cursor1 FOR
+     select *
+     from :IT_TAB;
+
+OPEN c_cursor1;
+
+    FOR cur_row AS c_cursor1 
+	DO	
+		-- select cur_row.outcol1 || cur_row.outcol2 || cur_row.outcol3 into outcol from "DA.PUBLISH::Dummy";
+		call "DA.PUBLISH::InsertView_H"(cur_row.viewname, cur_row.schemaname, cur_row.filter, cur_row.cron, 
+					cur_row.tfolder, cur_row.tfile,cur_row.functional,:outcol,cur_row.plhold,
+					cur_row.schid, cur_row.access);
+		
+    END FOR;
+    
+
+CLOSE c_cursor1;   
+   
+END

@@ -1,0 +1,116 @@
+namespace DA.PUBLISH;
+
+context DataModel {
+    entity EXTRACT_H {
+        key ID             : Integer not null;
+            VIEW_NAME      : String(255);
+            SCHEMA_NAME    : String(255);
+            USNAM		   : String(255);
+            CHDAT		   : LocalDate;
+            CRDAT		   : LocalDate;
+            CHGBY		   : String(255);
+            FUNCTION	   : String(50);
+    };
+
+    entity EXTRACT_SCHEDULE {
+    	key ID	 : Integer not null;
+    	key ITEM : Integer not null;
+    	key VID  : Integer not null;
+    		CRON : String(50);
+    	    FOLDER : String(255);
+    	    FILE: String(255);
+    	    SCHID: String(10);    
+    	    ACCESS: String(1);
+    };
+    
+    entity EXTRACT_VARIANT {
+    	key ID			   : Integer not null;
+    	key VID			   : Integer not null;
+    		FILTER		   : String(3000);
+            CRDBY		   : String(255);
+            CHDAT		   : LocalDate;
+            CRDAT		   : LocalDate;
+            CHGBY		   : String(255);    	
+            OUTCOLS		   : String(3000);    	
+            PLHOLD		   : String(1000);    
+    };
+    
+    entity EXTRACT_NOTIFY {
+    	key ID	 : Integer not null;
+    	key ITEM : Integer not null;
+    	key	EMAIL: String(100);
+    };
+    
+    entity EXTRACT_DOWNLOAD {
+    	key ID			   : Integer not null;
+    	key ITEM		   : Integer not null;
+    	key head_item	   : Integer;
+    	key time		   : UTCTimestamp not null; 
+    		SFOLDER		   : String(255);
+            TFOLDER		   : String(255);
+            SFILE		   : String(255);
+            TFILE		   : String(255);
+            EXEC_DATE	   : String(10); 
+            ACCESS		   : String(1);
+    };    
+
+
+    entity EXTRACT_ERROR {
+    	key ID			   : Integer not null;
+    	key ITEM		   : Integer not null;
+    	key head_item	   : Integer;
+    	key time		   : UTCTimestamp not null; 
+    		error_code	   : Integer;
+    		error_messsage : String(255);
+	};    
+    entity EXTRACT_CONFIG {
+    		SFOLDER		   : String(255);
+    };    
+
+    entity EXTRACT_SQL {
+        key ID             : Integer not null;
+            S_CODE           : String(1000);
+            TFOLDER		   : String(255);
+            TFILE		   : String(255);            
+            CRON		   : String(255);
+            FUNCTION	   : String(50);
+            SCHID		   : String(10);
+            CRTBY		   : String(255);
+            CRDAT		   : LocalDate;
+            CHGBY		   : String(255);            
+            CHDAT		   : LocalDate;
+			OUTCOLS		   : String(500);
+    };
+
+    entity EXTRACT_SQL_HEAD {
+        key ID             : Integer not null;
+        key POSITION       : Integer not null;
+            HEAD_TEXT	   : String(100);
+            ISNUMBER	   : String(1);
+            CRTBY		   : String(255);
+            CRDAT		   : LocalDate;
+            CHGBY		   : String(255);            
+            CHDAT		   : LocalDate;            
+    };
+
+    entity EXCEPTION_H {
+        key ID             : Integer not null;
+            VIEW_NAME      : String(255);
+            SCHEMA_NAME    : String(255);
+            USNAM		   : String(255);
+            CHDAT		   : LocalDate;
+            CRDAT		   : LocalDate;
+            CHGBY		   : String(255);
+            FUNCTION	   : String(50);
+    };
+
+    entity EXCEPTION_ITEM {
+    	key ID	 : Integer not null;
+    	key ITEM : Integer not null;
+    		KEYCOLS : String(1000);
+            USNAM		   : String(255);
+            CHDAT		   : LocalDate;
+            CRDAT		   : LocalDate;
+            CHGBY		   : String(255);
+    };    
+};

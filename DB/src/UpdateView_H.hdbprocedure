@@ -1,0 +1,25 @@
+PROCEDURE "DA.PUBLISH::UpdateView_H" (
+			IN viewid integer, itemid integer, vid integer,
+			IN filter NVARCHAR(500), IN cron NVARCHAR(50), IN tfolder NVARCHAR(255), 
+			IN tfile NVARCHAR(100), 
+			IN outcol NVARCHAR(500),IN plhold NVARCHAR(2000), IN schid NVARCHAR(10), IN access NVARCHAR(1)
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+    AS
+BEGIN
+	
+	update "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" 
+		set cron = :cron, FOLDER = :tfolder, "FILE" = :tfile, SCHID = :schid, ACCESS = :access
+		where "ID" = :viewid and 
+			  ITEM = :itemid and
+			  VID = :vid;
+	
+	update "DA.PUBLISH::DataModel.EXTRACT_VARIANT"
+		set "FILTER" = :filter, OUTCOLS = :outcol, plhold = :plhold
+		where "ID" = :viewid and
+			   VID = :vid;
+
+   
+END

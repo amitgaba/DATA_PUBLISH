@@ -1,0 +1,8 @@
+{
+        "DA.PUBLISH::BUT000_CRM": {
+        "target": {
+            "schema.configure": "crm-synonym-grantor-service/schema",
+            "object": "BUT000"
+        }
+    }
+}

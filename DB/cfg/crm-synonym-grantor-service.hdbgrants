@@ -1,0 +1,25 @@
+{
+    "crm-synonym-grantor-service": {
+        "object_owner": {
+            "object_privileges": [
+                {
+                    "name": "BUT000",
+                    
+                    "privileges_with_grant_option": [
+                        "SELECT"
+                    ]
+                }            
+            ]
+        },
+        "application_user": {
+            "object_privileges": [
+                                {
+                    "name": "BUT000",
+                    "privileges": [
+                        "SELECT"
+                    ]
+                }            
+            ]
+        }
+    }
+}

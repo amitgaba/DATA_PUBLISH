@@ -1,0 +1,29 @@
+PROCEDURE "DA.PUBLISH::DataPublishUPDCSV" (IN IT_TAB TABLE (ID INTEGER, ITEM INTEGER, VID INTEGER, viewname  NVARCHAR(255), schemaname  NVARCHAR(255),	
+			filter NVARCHAR(500), cron NVARCHAR(50), tfolder NVARCHAR(255), 
+			tfile NVARCHAR(100), functional NVARCHAR(50),
+			outcol NVARCHAR(500), plhold NVARCHAR(500), schid NVARCHAR(10), access NVARCHAR(1)) )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   AS
+BEGIN
+   /*************************************
+       Write your procedure logic 
+   *************************************/
+DECLARE CURSOR c_cursor1 FOR
+     select *
+     from :IT_TAB;
+
+OPEN c_cursor1;
+
+    FOR cur_row AS c_cursor1 
+	DO
+		call "DA.PUBLISH::UpdateView_H"(cur_row.ID, cur_row.ITEM, cur_row.vid,  cur_row.filter, cur_row.cron,
+					cur_row.tfolder, cur_row.tfile, cur_row.outcol,cur_row.plhold,
+					cur_row.schid, cur_row.access);
+    END FOR;
+    
+
+CLOSE c_cursor1;   
+   
+END

@@ -1,0 +1,76 @@
+<edmx:Edmx
+    xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" Version="1.0">
+    <edmx:DataServices
+        xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" m:DataServiceVersion="2.0">
+        <Schema
+            xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"
+            xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+            xmlns="http://schemas.microsoft.com/ado/2008/09/edm" Namespace="default">
+            <EntityType Name="HEADERType">
+                <Key>
+                    <PropertyRef Name="ID"/>
+                </Key>
+                <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+                <Property Name="VIEW_NAME" Type="Edm.String" MaxLength="255"/>
+                <Property Name="SCHEMA_NAME" Type="Edm.String" MaxLength="255"/>
+                <Property Name="USNAM" Type="Edm.String" MaxLength="255"/>
+                <Property Name="CHDAT" Type="Edm.DateTime"/>
+                <Property Name="CRDAT" Type="Edm.DateTime"/>
+                <Property Name="CHGBY" Type="Edm.String" MaxLength="255"/>
+                <Property Name="FUNCTION" Type="Edm.String" MaxLength="50"/>
+                <NavigationProperty Name="Schedule" Relationship="default.ScheduleType" FromRole="HEADERPrincipal" ToRole="ITEM_SDependent"/>
+            </EntityType>
+            <EntityType Name="ITEM_SType">
+                <Key>
+                    <PropertyRef Name="ID"/>
+                    <PropertyRef Name="ITEM"/>
+                    <PropertyRef Name="VID"/>
+                </Key>
+                <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+                <Property Name="ITEM" Type="Edm.Int32" Nullable="false"/>
+                <Property Name="VID" Type="Edm.Int32" Nullable="false"/>
+                <Property Name="CRON" Type="Edm.String" MaxLength="50"/>
+                <Property Name="FOLDER" Type="Edm.String" MaxLength="255"/>
+                <Property Name="FILE" Type="Edm.String" MaxLength="255"/>
+                <NavigationProperty Name="Schedule_Detail" Relationship="default.ScheduleType" FromRole="ITEM_SDependent" ToRole="HEADERPrincipal"/>
+            </EntityType>
+            <EntityType Name="VARIANTType">
+                <Key>
+                    <PropertyRef Name="ID"/>
+                    <PropertyRef Name="VID"/>
+                </Key>
+                <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+                <Property Name="VID" Type="Edm.Int32" Nullable="false"/>
+                <Property Name="FILTER" Type="Edm.String" MaxLength="500"/>
+                <Property Name="CRDBY" Type="Edm.String" MaxLength="255"/>
+                <Property Name="CHDAT" Type="Edm.DateTime"/>
+                <Property Name="CRDAT" Type="Edm.DateTime"/>
+                <Property Name="CHGBY" Type="Edm.String" MaxLength="255"/>
+                <Property Name="OUTCOLS" Type="Edm.String" MaxLength="255"/>
+                <Property Name="PLHOLD" Type="Edm.String" MaxLength="1000"/>
+                <NavigationProperty Name="Item_Detail" Relationship="default.VariantType" FromRole="VARIANTDependent" ToRole="HEADERPrincipal"/>
+            </EntityType>
+            <Association Name="ScheduleType">
+                <End Type="default.HEADERType" Role="HEADERPrincipal" Multiplicity="1"/>
+                <End Type="default.ITEM_SType" Role="ITEM_SDependent" Multiplicity="*"/>
+            </Association>
+            <Association Name="VariantType">
+                <End Type="default.HEADERType" Role="HEADERPrincipal" Multiplicity="1"/>
+                <End Type="default.VARIANTType" Role="VARIANTDependent" Multiplicity="*"/>
+            </Association>
+            <EntityContainer Name="v2" m:IsDefaultEntityContainer="true">
+                <EntitySet Name="HEADER" EntityType="default.HEADERType"/>
+                <EntitySet Name="ITEM_S" EntityType="default.ITEM_SType"/>
+                <EntitySet Name="VARIANT" EntityType="default.VARIANTType"/>
+                <AssociationSet Name="Schedule" Association="default.ScheduleType">
+                    <End Role="HEADERPrincipal" EntitySet="HEADER"/>
+                    <End Role="ITEM_SDependent" EntitySet="ITEM_S"/>
+                </AssociationSet>
+                <AssociationSet Name="Variant" Association="default.VariantType">
+                    <End Role="HEADERPrincipal" EntitySet="HEADER"/>
+                    <End Role="VARIANTDependent" EntitySet="VARIANT"/>
+                </AssociationSet>
+            </EntityContainer>
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>

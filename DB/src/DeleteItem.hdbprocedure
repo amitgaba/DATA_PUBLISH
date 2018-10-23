@@ -1,0 +1,25 @@
+PROCEDURE "DA.PUBLISH::DeleteItem" (
+			IN viewid integer, itemid integer, vid integer
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+    AS
+BEGIN
+	declare lv_count integer;
+
+	delete from "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" 
+		where "ID" = :viewid and 
+			  ITEM = :itemid and
+			  VID = :vid;
+	
+	select count(*) into lv_count from "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" 
+	where "ID" = :viewid and 
+			  ITEM <> :itemid and
+			  VID = :vid;
+	if :lv_count is null or :lv_count = 0 then		  
+	delete from "DA.PUBLISH::DataModel.EXTRACT_VARIANT"
+		where "ID" = :viewid and
+			   VID = :vid;
+	end if;
+   
+END

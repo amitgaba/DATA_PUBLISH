@@ -1,0 +1,57 @@
+PROCEDURE "DA.PUBLISH::ProcessSQLJob" ( )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+    AS
+BEGIN
+   /*************************************
+       Write your procedure logic 
+   *************************************/
+ declare nRowCount Integer;
+ declare nCurrCount Integer :=1;
+ declare lv_id Integer;
+ declare lv_item Integer;
+ declare nOffset Integer;
+ 
+ lt_today_cron = select to_Varchar(EXTRACT ( day from CURRENT_DATE )) as cdate,
+	   to_varchar(EXTRACT ( month from CURRENT_DATE )) as cmon,
+	   to_varchar(EXTRACT ( year from CURRENT_DATE )) as cyear,	
+	   to_varchar(week(current_date) - week(last_day(add_months(current_date,-1)))) as week_no, 
+ 	   dayname(current_date) as day_name
+ from "DA.PUBLISH::Dummy" ;
+ 
+ lt_schedule = select id,
+	   SUBSTR_BEFORE(cron, ' ') as cyear,
+	   SUBSTR_BEFORE(SUBSTR_AFTER(cron, ' '),' ') as cmon,
+	   SUBSTR_BEFORE(substr_after(SUBSTR_AFTER(cron, ' '),' '),' ') as cdate,
+	   SUBSTR_BEFORE(substr_after(substr_after(SUBSTR_AFTER(cron, ' '),' '),' '),' ') as week_no,
+	   substr_after(substr_after(substr_after(SUBSTR_AFTER(cron, ' '),' '),' '),' ') as day_name	  
+ from "DA.PUBLISH::DataModel.EXTRACT_SQL";
+ 
+ et_schedule = 
+	select a.id
+		from :lt_schedule as a
+		inner join :lt_today_cron as b
+		on (a.cdate = b.cdate or a.cdate in ('',' ','*') ) and
+		    (a.cmon = b.cmon or a.cmon in ('',' ','*') ) and
+		    (a.cyear = b.cyear or a.cyear in ('',' ','*') ) and
+			(a.week_no = b.week_no or a.week_no in ('',' ','*') ) 		    and
+			(a.day_name = b.day_name or a.day_name in ('',' ','*') );
+
+	SELECT COUNT(1) INTO nRowCount FROM :et_schedule;
+	
+	while nCurrCount <= nRowCount do
+		nOffset = nCurrCount - 1;
+		lt_process = 
+			select a.id
+				from :et_schedule as a
+				limit 1
+				offset :nOffset ;
+				
+		nCurrCount = nCurrCount + 1;				
+		
+		select max(id) into lv_id from :lt_process;
+		
+		call  "DA.PUBLISH::ExportSQL2"(:lv_id);
+	end while;
+END

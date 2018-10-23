@@ -1,0 +1,62 @@
+PROCEDURE "DA.PUBLISH::InsertView_H" (IN viewname  NVARCHAR(255), IN schemaname  NVARCHAR(255),	
+			IN filter NVARCHAR(3000), IN cron NVARCHAR(50), IN tfolder NVARCHAR(255), 
+			IN tfile NVARCHAR(100), IN functional NVARCHAR(50),
+			IN outcol NVARCHAR(3000), IN plhold NVARCHAR(500), IN schid NVARCHAR(10), IN access NVARCHAR(1)
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+    AS
+BEGIN
+   /*************************************
+       Write your procedure logic 
+   *************************************/
+   declare viewid integer;
+   declare variantid integer;
+   declare scheduleid integer;
+   
+   select max(id) into viewid from "DA.PUBLISH::DataModel.EXTRACT_H" where view_name = :viewname;
+   if :viewid is null then
+   if functional = 'DG' then 
+   select "DA.PUBLISH::DG".nextval into viewid from "DA.PUBLISH::Dummy";
+   elseif functional = 'SCM' then
+   select "DA.PUBLISH::SCM".nextval into viewid from "DA.PUBLISH::Dummy";
+   elseif functional = 'SVC' then
+   select "DA.PUBLISH::SVC".nextval into viewid from "DA.PUBLISH::Dummy";
+   elseif functional = 'SAM' then
+   select "DA.PUBLISH::SAM".nextval into viewid from "DA.PUBLISH::Dummy";
+   end if;
+
+   insert into "DA.PUBLISH::DataModel.EXTRACT_H" 
+   values(:viewid,:viewname,:schemaname,current_user,current_date,current_date,current_user,functional);
+   
+   insert into "DA.PUBLISH::DataModel.EXTRACT_VARIANT" 
+	values(:viewid,1,:filter,current_user,current_date,current_date,current_user,outcol,plhold); 
+	
+	 insert into "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" 
+	 	values(:viewid,1,1,:cron,:tfolder,:tfile,:schid,:access);	
+   else 
+   select max(vid) into variantid from 	
+	"DA.PUBLISH::DataModel.EXTRACT_VARIANT" 
+	where id = :viewid and 
+		  filter = :filter and
+		  plhold = :plhold and
+		  outcols = :outcol;
+	if variantid is null then
+		select max(vid) + 1 into variantid 
+			from "DA.PUBLISH::DataModel.EXTRACT_VARIANT" 
+			where id = :viewid;
+
+		insert into "DA.PUBLISH::DataModel.EXTRACT_VARIANT" 
+		values(:viewid,:variantid,:filter,current_user,current_date,current_date,current_user,outcol,plhold);			 
+	end if;
+	
+   select max(item) + 1 into scheduleid from 	
+	"DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" 
+	where id = :viewid;
+   
+    insert into "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" 
+		 values(:viewid,:scheduleid,:variantid,:cron,:tfolder,:tfile, :schid,:access);
+   end if;
+   
+END

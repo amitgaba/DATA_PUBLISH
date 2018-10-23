@@ -1,0 +1,274 @@
+PROCEDURE "DA.PUBLISH::ExportView" ( IN view_id integer, IN Item Integer )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+  AS
+BEGIN
+   /*************************************
+       Write your procedure logic 
+   *************************************/
+declare SQLQUERY varchar(8000);
+declare outcolsquery nvarchar(8000);
+declare view_name varchar(250);
+declare filter varchar(500);
+declare outcol varchar(500);
+declare schema_name varchar(500);
+declare table_name varchar(100);
+declare table_name1 varchar(100);
+declare tfolder varchar(255);
+declare sfolder varchar(255);
+declare tfile varchar(255);
+declare ov_error_message string;
+declare access nvarchar(1);
+declare plhold varchar(1000);
+DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+BEGIN
+-- Set status as E(Error) 
+-- ov_error_code := ::sql_error_code;				-- SQL Error Code
+ov_error_message := ::sql_error_message;		-- Error Message
+insert into "DA.PUBLISH::DataModel.EXTRACT_ERROR" values(:view_id,:item,0,current_timestamp,::sql_error_code, ::Sql_error_message);
+
+
+END;   
+
+
+select 'DA_' || view_id || '_' || item || '_ITEM' into table_name from  "DA.PUBLISH::Dummy";
+select 'DA_' || view_id || '_' || item into table_name1 from  "DA.PUBLISH::Dummy";
+
+select max(a.view_name) into view_name 
+	from
+	"DA.PUBLISH::DataModel.EXTRACT_H" as a
+	where a.id = :view_id;
+
+select max(a.schema_name) into schema_name 
+	from
+	"DA.PUBLISH::DataModel.EXTRACT_H" as a
+	where a.id = :view_id ;
+	
+select max(c.filter) into filter
+	from
+	"DA.PUBLISH::DataModel.EXTRACT_H" as a
+	inner join "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" as b
+		on a.id = b.id 
+	inner join "DA.PUBLISH::DataModel.EXTRACT_VARIANT" as c
+		on a.id = c.id and
+		   b.vid = c.vid
+	where a.id = :view_id and
+		  b.item = :item;
+
+select ifnull(max(c.outcols),'') into outcol
+	from
+	"DA.PUBLISH::DataModel.EXTRACT_H" as a
+	inner join "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" as b
+		on a.id = b.id 
+	inner join "DA.PUBLISH::DataModel.EXTRACT_VARIANT" as c
+		on a.id = c.id and
+		   b.vid = c.vid
+	where a.id = :view_id and
+		  b.item = :item;
+
+select ifnull(max(c.plhold),'') into plhold
+	from
+	"DA.PUBLISH::DataModel.EXTRACT_H" as a
+	inner join "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" as b
+		on a.id = b.id 
+	inner join "DA.PUBLISH::DataModel.EXTRACT_VARIANT" as c
+		on a.id = c.id and
+		   b.vid = c.vid
+	where a.id = :view_id and
+		  b.item = :item;
+
+select trim(:outcol) into outcol from 	"DA.PUBLISH::Dummy";
+
+if :outcol = '' or :outcol = '*'   then 
+lt_outcols = select a.column_name as matnr,
+					a.column_name as column_name
+				from "DA.PUBLISH::VIEW_COLUMNS" as a
+					where view_name = :view_name 
+					and schema_name = :schema_name
+					group by a.column_name;
+
+else
+lt_outcols1 = select * from "DA.PUBLISH::SPLIT_STRING"(:outcol);
+lt_outcols2 = 
+select matnr,
+row_number() over(PARTITION BY matnr order by matnr) as row_num from :lt_outcols1;
+
+lt_outcols = 
+select matnr,
+case when row_num > 1 then matnr ||  row_num
+	else matnr end as column_name
+	from :lt_outcols2;
+	
+end if;
+
+select max(b.folder) into tfolder
+	from
+	"DA.PUBLISH::DataModel.EXTRACT_H" as a
+	inner join "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" as b
+		on a.id = b.id 
+	where a.id = :view_id and
+		  b.item = :item;
+
+select max(b.file) into tfile
+	from
+	"DA.PUBLISH::DataModel.EXTRACT_H" as a
+	inner join "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" as b
+		on a.id = b.id 
+	where a.id = :view_id and
+		  b.item = :item;
+
+select max(b.access) into access
+	from
+	"DA.PUBLISH::DataModel.EXTRACT_H" as a
+	inner join "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" as b
+		on a.id = b.id 
+	where a.id = :view_id and
+		  b.item = :item;
+if :access = 'X' then 
+select '1' into access from "DA.PUBLISH::Dummy";
+else
+select '0' into access from "DA.PUBLISH::Dummy";
+end if;
+
+
+select max(a.sfolder) into sfolder
+	from
+	"DA.PUBLISH::DataModel.EXTRACT_CONFIG" as a;
+select :sfolder || '\' || table_name1 into sfolder from  "DA.PUBLISH::Dummy";		  
+
+select
+concat(concat(concat('create table ',table_name),
+concat('( ' ,
+String_Agg(columnStr, ', ' order by position))),');')
+into SQLQUERY
+from ( select
+  min(position) as position,
+  '"' || b.column_name || 
+  '" ' || max(data_type_name)  || 
+  (case when max(cs_data_type_name) NOT IN ('FIXED','STRING') then '' else '(' || max(length) || 
+  (case when max(scale) is null then '' else ',' || max(scale) end ) || ')' end) as columnStr
+ from "DA.PUBLISH::VIEW_COLUMNS" as a
+ inner join :lt_outcols as b
+	on ltrim(b.column_name) = a.column_name
+ where view_name = :view_name 
+  and schema_name = :schema_name
+ group by b.column_name
+ order by position
+ 
+);
+
+EXECUTE IMMEDIATE (:SQLQUERY);
+
+select
+String_Agg(columnStr, ', ' order by position)
+into outcolsquery
+from ( select
+  min(position) as position,
+  '"' || a.column_name || 
+  '" '  
+as columnStr
+ from "DA.PUBLISH::VIEW_COLUMNS" as a
+ inner join :lt_outcols as b
+--	on b.matnr like concat(concat('%',a.column_name),'%')
+	on ltrim(b.matnr) = a.column_name
+ where view_name = :view_name 
+  and schema_name = :schema_name
+ group by a.column_name, b.column_name
+ order by position
+ 
+);
+select trim(:filter) into filter from "DA.PUBLISH::Dummy";
+if :filter <> '' then 
+select 'INSERT INTO ' || table_name || ' SELECT ' || outcolsquery || ' FROM "' || schema_name || '"."' || :view_name || '"' || plhold || ' where ' || :filter ||';' 
+into "SQLQUERY" from  "DA.PUBLISH::Dummy";
+else
+select 'INSERT INTO ' || table_name || ' SELECT ' || outcolsquery || ' FROM "' || schema_name || '"."' || :view_name  ||  '"' || plhold || ';' 
+into "SQLQUERY" from  "DA.PUBLISH::Dummy";
+end if;
+
+EXECUTE IMMEDIATE :SQLQUERY;
+
+select 'EXPORT  ' || table_name || ' AS CSV INTO ''/ch00sa19/DA'' WITH REPLACE THREADS 10;'
+into "SQLQUERY" from "DA.PUBLISH::Dummy";
+EXECUTE IMMEDIATE :SQLQUERY; 
+
+
+select 'SELECT * FROM ' || table_name into "SQLQUERY" from "DA.PUBLISH::Dummy";
+EXECUTE IMMEDIATE :SQLQUERY; 
+ 
+select 'DROP TABLE ' || table_name into "SQLQUERY" from "DA.PUBLISH::Dummy";
+ EXECUTE IMMEDIATE :SQLQUERY; 
+
+
+select 'DA_' || view_id || '_' || item || '_HEAD' into table_name from  "DA.PUBLISH::Dummy";
+
+select
+concat(concat(concat('create table ',table_name),
+concat('( ' ,
+String_Agg(columnStr, ', ' order by position))),');')
+into SQLQUERY
+from ( select
+  min(position) as position,
+  '"' || b.column_name || 
+   '" NVARCHAR(256)'as columnStr
+ from "DA.PUBLISH::VIEW_COLUMNS" as a
+ inner join :lt_outcols as b
+	on ltrim(b.matnr) = a.column_name
+ where view_name = :view_name 
+  and schema_name = :schema_name
+ group by b.column_name
+ order by position
+);
+
+
+EXECUTE IMMEDIATE (:SQLQUERY);
+
+select
+concat(concat(concat('INSERT INTO ',table_name),
+concat(' values( ' ,
+String_Agg(concat('''',columnStr),''', ' order by position))),''');')
+into SQLQUERY
+from ( select
+  min(position) as position,
+  a.column_name,
+  ifnull(REPLACE(max(comments),'''',''),a.column_name) as columnStr
+  --column_name as columnStr
+ from "DA.PUBLISH::VIEW_COLUMNS" as a
+  inner join :lt_outcols as b
+	on ltrim(b.matnr)  = a.column_name
+ where view_name = :view_name 
+  and schema_name = :schema_name
+group by a.column_name, b.column_name
+ order by position
+);
+
+
+EXECUTE IMMEDIATE :SQLQUERY;
+select 'EXPORT  ' || table_name || ' AS CSV INTO ''/ch00sa19/DA'' WITH REPLACE THREADS 10;'
+into "SQLQUERY" from "DA.PUBLISH::Dummy";
+EXECUTE IMMEDIATE :SQLQUERY; 
+
+ 
+select 'SELECT * FROM ' || table_name into "SQLQUERY" from "DA.PUBLISH::Dummy";
+EXECUTE IMMEDIATE :SQLQUERY; 
+ 
+select 'DROP TABLE ' || table_name into "SQLQUERY" from "DA.PUBLISH::Dummy";
+ EXECUTE IMMEDIATE :SQLQUERY; 
+
+select :tfile into tfile from "DA.PUBLISH::Dummy";
+--select :sqlquery from "DA.PUBLISH::Dummy";
+
+delete from "DA.PUBLISH::DataModel.EXTRACT_DOWNLOAD"
+ where id = :view_id and item = :item; 
+commit;
+
+ insert into "DA.PUBLISH::DataModel.EXTRACT_DOWNLOAD" values(:view_id,:item,0,current_timestamp,:sfolder,:tfolder,'DATA',:tfile,TO_VARCHAR(current_date, 'MM/DD/YYYY'),:access);
+
+
+select 'EXPORT  "DA.PUBLISH::DataModel.EXTRACT_DOWNLOAD"' || ' AS CSV INTO ''/ch00sa19/DA'' WITH REPLACE THREADS 10;'
+into "SQLQUERY" from "DA.PUBLISH::Dummy";
+EXECUTE IMMEDIATE :SQLQUERY; 
+
+
+END

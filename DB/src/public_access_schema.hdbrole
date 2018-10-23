@@ -1,0 +1,16 @@
+{
+    "role": {
+        "name": "DA.PUBLISH::PublicAccessSchema",
+        "schema_privileges": [
+            {
+                "privileges": [
+                    "SELECT",
+                    "EXECUTE",
+                    "CREATE ANY",
+                    "UPDATE",
+                    "DELETE"
+                ]
+            }
+        ]
+    }
+}

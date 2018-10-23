@@ -1,0 +1,20 @@
+PROCEDURE "DA.PUBLISH::DeleteHead" (
+			IN viewid integer
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+    AS
+BEGIN
+	declare lv_count integer;
+
+	delete from "DA.PUBLISH::DataModel.EXTRACT_H" 
+		where "ID" = :viewid ;
+	
+	delete from "DA.PUBLISH::DataModel.EXTRACT_SCHEDULE" 
+		where "ID" = :viewid ;
+	
+	delete from "DA.PUBLISH::DataModel.EXTRACT_VARIANT"
+		where "ID" = :viewid;
+
+   
+END

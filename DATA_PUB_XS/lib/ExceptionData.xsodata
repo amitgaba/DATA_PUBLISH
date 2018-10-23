@@ -1,0 +1,5 @@
+service {
+	"DA.PUBLISH::DataModel.EXCEPTION_H" as "HEADER" navigates ("Schedule" as "Schedule");
+	"DA.PUBLISH::DataModel.EXTRACT_ITEM" as "ITEM" navigates ("Schedule" as "Schedule_Detail");
+     association "Schedule" principal "HEADER"("ID") multiplicity "1" dependent "ITEM"("ID") multiplicity "*";
+}                             

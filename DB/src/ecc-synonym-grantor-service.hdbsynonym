@@ -1,0 +1,11 @@
+{
+    "DA.PUBLISH::TABLE_COLUMNS": {},
+    "DA.PUBLISH::M_TIME_DIMENSION": {},
+	"DA.PUBLISH::VIEW_COLUMNS": {},
+	"DA.PUBLISH::Dummy": {
+    "target": {
+      "object": "DUMMY",
+      "schema": "SYS"
+    }
+  }	
+}

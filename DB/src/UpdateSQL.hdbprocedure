@@ -1,0 +1,42 @@
+PROCEDURE "DA.PUBLISH::UpdateSQL" (
+			IN sqlid integer, IN scode NVARCHAR(500),
+			IN cron NVARCHAR(50), IN tfolder NVARCHAR(255), 
+			IN tfile NVARCHAR(100), 
+			IN outcol NVARCHAR(500),IN schid NVARCHAR(10), IN function NVARCHAR(50) 
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+    AS
+BEGIN
+	declare lv_pos integer;
+	
+	update "DA.PUBLISH::DataModel.EXTRACT_SQL" 
+		set cron = :cron, TFOLDER = :tfolder, "TFILE" = :tfile, SCHID = :schid,
+			S_CODE = :scode, FUNCTION = :function, CHGBY = current_user, CHDAT = current_Date,
+			OUTCOLS = :outcol
+		where "ID" = :sqlid;
+	
+
+   lt_outcols = select * from "DA.PUBLISH::SPLIT_STRING_WITH_POS"(:outcol);   
+   
+   select max(pos) into lv_pos from :lt_outcols;
+   if :lv_pos is not null then
+   
+   lt_sqlhead = select * from "DA.PUBLISH::DataModel.EXTRACT_SQL_HEAD" where id = :sqlid;
+   
+   delete from "DA.PUBLISH::DataModel.EXTRACT_SQL_HEAD" where id = :sqlid;
+   commit;
+   
+   insert into "DA.PUBLISH::DataModel.EXTRACT_SQL_HEAD" 
+   select :sqlid as id, a.pos as position, a.matnr as HEAD_TEXT,
+		  ifnull(b.crtby,current_user) as CRTBY,
+		  ifnull(b.crdat,current_date) as CRDAT,
+		  current_user as CHGBY,current_date as CHDAT,
+		  ifnull(b.isnumber,'') as isnumber
+		  from :lt_outcols as a
+		  left outer join :lt_sqlhead  as b
+		  on a.pos = b.position;   
+	end if;
+	
+END

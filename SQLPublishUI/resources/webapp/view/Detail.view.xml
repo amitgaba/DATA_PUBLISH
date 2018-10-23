@@ -1,0 +1,119 @@
+<mvc:View
+		controllerName="da.sql.publish.controller.Detail"
+		xmlns="sap.m"
+		xmlns:mvc="sap.ui.core.mvc"
+		xmlns:semantic="sap.m.semantic"
+		xmlns:footerbar="sap.ushell.ui.footerbar">
+
+	<semantic:DetailPage
+			id="page"
+			navButtonPress="onNavBack"
+			showNavButton="{device>/system/phone}"
+			title="{i18n>detailTitle}"
+			busy="{detailView>/busy}"
+			busyIndicatorDelay="{detailView>/delay}">
+
+		<semantic:content>
+			<ObjectHeader
+					id="objectHeader"
+					title="{S_CODE}"
+					number="{
+								path: 'ID',
+								formatter: '.formatter.currencyValue'
+					}"
+					numberUnit="{CRON}">
+			</ObjectHeader>
+			<IconTabBar
+					id="iconTabBar"
+					class="sapUiResponsiveContentPadding">
+				<items>
+					<IconTabFilter
+							id="iconTabBarFilter1"
+							icon="sap-icon://hint"
+							tooltip="{i18n>detailIconTabBarInfo}">
+					</IconTabFilter>
+					<IconTabFilter
+							id="iconTabBarFilter2"
+							icon="sap-icon://attachment"
+							tooltip="{i18n>detailIconTabBarAttachments}">
+					</IconTabFilter>
+				</items>
+			</IconTabBar>
+			<Table
+					id="lineItemsList"
+					width="auto"
+					items="{Schedule}"
+					updateFinished="onListUpdateFinished"
+					selectionChange = "rowSelect"
+					cellClick="onitemPress"
+					selectionBehavior="RowSelector"
+					mode="MultiSelect"
+					noDataText="{i18n>detailLineItemTableNoDataText}"
+					busyIndicatorDelay="{detailView>/lineItemTableDelay}"
+					class="sapUiResponsiveMargin">
+				<headerToolbar>
+					<Toolbar id="lineItemsToolbar">
+						<Title
+								id="lineItemsHeader"
+								text="{detailView>/lineItemListTitle}"/>
+					</Toolbar>
+				</headerToolbar>
+				<columns>
+					<Column>
+						<Text text="{i18n>detailLineItemTableIDColumn}"/>
+					</Column>
+					<Column
+							minScreenWidth="Tablet"
+							demandPopin="true"
+							hAlign="Right">
+						<Text text="{i18n>detailLineItemTableUnitNumberColumn}"/>
+					</Column>
+				</columns>
+				<items>
+					<ColumnListItem>
+						<cells>
+							<ObjectIdentifier
+									title="{HEAD_TEXT}"
+									text="{ID}"/>
+							<ObjectNumber
+								number="{
+									path: 'POSITION',
+									formatter: '.formatter.currencyValue'
+								}"
+								unit="{ID}"/>
+						</cells>
+					</ColumnListItem>
+				</items>
+			</Table>
+		</semantic:content>
+
+		<semantic:sendEmailAction>
+			<semantic:SendEmailAction
+					id="shareEmail"
+					press="onShareEmailPress"/>
+		</semantic:sendEmailAction>
+
+		<semantic:shareInJamAction>
+			<semantic:ShareInJamAction
+					id="shareInJam"
+					visible="{FLP>/isShareInJamActive}"
+					press="onShareInJamPress"/>
+		</semantic:shareInJamAction>
+
+		<semantic:saveAsTileAction>
+			<footerbar:AddBookmarkButton
+					id="shareTile"
+					title="{detailView>/saveAsTileTitle}"/>
+		</semantic:saveAsTileAction>
+		<semantic:customFooterContent>
+			<Button press="onEdit" icon="sap-icon://edit" tooltip="Edit"/>
+		</semantic:customFooterContent>
+		<semantic:customFooterContent>
+			<Button press="onPosSave" icon="sap-icon://save" tooltip="Save"/>
+		</semantic:customFooterContent>
+		<semantic:customFooterContent>
+			<Button press="onDelete" icon="sap-icon://delete" tooltip="Delete"/>
+		</semantic:customFooterContent>		
+	</semantic:DetailPage>
+
+</mvc:View>

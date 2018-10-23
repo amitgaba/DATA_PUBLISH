@@ -1,0 +1,15 @@
+PROCEDURE "DA.PUBLISH::DELETESQL" (
+			IN sqlid integer
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+    AS
+BEGIN
+
+	delete from "DA.PUBLISH::DataModel.EXTRACT_SQL" 
+		where "ID" = :sqlid ;
+
+	delete from "DA.PUBLISH::DataModel.EXTRACT_SQL_HEAD" 
+		where "ID" = :sqlid ;
+   
+END
